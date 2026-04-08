@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster Ultra | Hybrid Architecture</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- INTEGRATED CSS DESIGN --- */
+        :root {
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --bg-dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.85);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --shadow-soft: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            background-attachment: fixed;
+        }
+
+        /* Decorative Background Orbs */
+        .glass-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.4; }
+        .orb-1 { width: 400px; height: 400px; background: #c4b5fd; top: -100px; right: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: #bae6fd; bottom: -50px; left: -50px; }
+
+        .app-shell { width: 95%; max-width: 850px; margin: 40px 0; z-index: 1; }
+
+        /* Premium Glass Header */
+        .main-header {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            padding: 2.2rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 1rem;
+            z-index: 100;
+        }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .brand h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -1.5px; }
+        .brand h1 span { color: var(--accent); }
+        .brand p { color: var(--text-secondary); font-size: 0.85rem; }
+
+        /* Progress Ring UI */
+        .progress-container { position: relative; display: flex; align-items: center; justify-content: center; }
+        .ring-fill { transition: stroke-dashoffset 0.4s ease; transform: rotate(-90deg); transform-origin: center; }
+        #progress-percent { position: absolute; font-size: 0.7rem; font-weight: 800; color: var(--accent); }
+
+        /* Action Controls */
+        .action-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+        .search-box { flex: 1; }
+        .search-box input {
+            width: 100%; padding: 14px 20px; border-radius: var(--radius-md);
+            border: 1px solid #e2e8f0; font-family: inherit; transition: 0.3s;
+        }
+        .search-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
+
+        .btn-primary {
+            background: var(--accent); color: white; border: none; padding: 0 24px;
+            border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: 0.3s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px var(--accent-glow); }
+
+        /* Navigation Tabs */
+        .filter-nav { display: flex; gap: 2rem; border-bottom: 1px solid #e2e8f0; }
+        .filter-link {
+            background: none; border: none; padding: 10px 0; font-weight: 600;
+            color: var(--text-secondary); cursor: pointer; position: relative;
+        }
+        .filter-link.active { color: var(--accent); }
+        .filter-link.active::after {
+            content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--accent);
+        }
+
+        /* Task Grid */
+        .todo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+
+        .todo-card {
+            background: white; padding: 1.5rem; border-radius: var(--radius-md);
+            box-shadow: var(--shadow-soft); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; gap: 12px; border: 1px solid transparent; cursor: pointer;
+        }
+        .todo-card:hover { transform: translateY(-5px); border-color: var(--accent-glow); }
+        .todo-card.completed { background: #f8fafc; opacity: 0.7; }
+
+        /* Custom Checkbox */
+        .custom-check {
+            width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 6px;
+            flex-shrink: 0; position: relative; transition: 0.2s;
+        }
+        .custom-check.checked { background: var(--accent); border-color: var(--accent); }
+        .custom-check.checked::after {
+            content: '✓'; color: white; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); font-size: 12px;
+        }
+
+        .todo-card span { font-weight: 500; line-height: 1.4; pointer-events: none; }
+        .todo-card.completed span { text-decoration: line-through; color: var(--text-secondary); }
+
+        /* States */
+        .loader-wrap { text-align: center; padding: 5rem; width: 100%; grid-column: 1/-1; }
+        .pulsar {
+            width: 45px; height: 45px; border: 4px solid var(--accent); border-radius: 50%;
+            margin: 0 auto 1rem; animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+        .toast {
+            position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-dark); color: white; padding: 14px 32px;
+            border-radius: 40px; transition: 0.5s; z-index: 1000; font-weight: 600;
+        }
+        .toast.show { bottom: 30px; }
+
+        @media (max-width: 600px) {
+            .action-bar { flex-direction: column; }
+            .btn-primary { height: 50px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-orb orb-1"></div>
+    <div class="glass-orb orb-2"></div>
+
+    <div class="app-shell">
+        <header class="main-header">
+            <div class="header-top">
+                <div class="brand">
+                    <h1>TaskMaster<span>.</span></h1>
+                    <p id="live-date">Syncing with server...</p>
+                </div>
+                <div class="progress-container">
+                    <svg width="58" height="58">
+                        <circle stroke="#e2e8f0" stroke-width="4" fill="transparent" r="26" cx="29" cy="29"/>
+                        <circle id="progress-ring" class="ring-fill" stroke="url(#accent-grad)" stroke-width="4" stroke-linecap="round" fill="transparent" r="26" cx="29" cy="29"/>
+                        <defs>
+                            <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#8b5cf6" />
+                                <stop offset="100%" stop-color="#6366f1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span id="progress-percent">0%</span>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search 200 tasks...">
+                </div>
+                <button id="add-btn" class="btn-primary">Add Todo</button>
+            </div>
+
+            <nav class="filter-nav">
+                <button class="filter-link" data-filter="incomplete">Incomplete</button>
+                <button class="filter-link" data-filter="completed">Completed</button>
+                <button class="filter-link active" data-filter="all">All</button>
+            </nav>
+        </header>
+
+        <main id="todo-list" class="todo-grid">
+            <div id="loader" class="loader-wrap">
+                <div class="pulsar"></div>
+                <p>Establishing secure connection...</p>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast">Successfully added to last!</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
